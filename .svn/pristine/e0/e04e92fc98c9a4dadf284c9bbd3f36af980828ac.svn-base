@@ -1,0 +1,68 @@
+package br.com.lphantus.neighbor.service.integracao.mail;
+
+import org.apache.commons.mail.HtmlEmail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class EnviarEmailThread implements Runnable {
+
+	private Logger logger = LoggerFactory.getLogger(getClass());
+
+	private final String assunto;
+	private final String textoCorpo;
+	private final String destinatario;
+	private final String remetente;
+	private final String remetenteNome;
+	private final String usuario;
+	private final String senha;
+
+	private String host;
+	private Integer port;
+
+	public EnviarEmailThread(final String assunto, final String textoCorpo, final String destinatario, final String remetente, final String remetenteNome, 
+			final String usuario, final String senha, String host, Integer port) {
+		this.assunto = assunto;
+		this.textoCorpo = textoCorpo;
+		this.destinatario = destinatario;
+		this.remetente = remetente;
+		this.remetenteNome = remetenteNome;
+		this.usuario = usuario;
+		this.senha = senha;
+		this.host = host;
+		this.port = port;
+	}
+
+	@Override
+	public void run() {
+		enviarEmail();
+	}
+
+	private void enviarEmail() {
+		try {
+			// Create the email message
+			final HtmlEmail email = new HtmlEmail();
+			email.setDebug(false);
+			email.setHostName(host);
+			email.setSSL(true);
+			email.setSmtpPort(port);
+			email.setAuthentication(this.usuario, this.senha);
+
+			email.addTo(this.destinatario);
+			email.setFrom(this.remetente, this.remetenteNome);
+			email.setSubject(this.assunto);
+			email.setHtmlMsg(this.textoCorpo);
+			// set the alternative message
+			// email.setTextMsg("Your email client does not support HTML messages");
+
+			email.send();
+
+			// logger.info("\n Email enviado COM SUCESSO. \n" + " Destinatario: " + this.destinatario + " \n" + " Assunto: " + this.assunto + " \n");
+
+		} catch (final Exception e) {
+			logger.info("\n Erro ao enviar email. \n" + " Erro:" + e.getMessage() + " \n" + " Destinatario: " + this.destinatario + " \n" 
+					+ " Assunto: " + this.assunto + " \n" + " Mensagem: \n " + "\t " + this.textoCorpo + " \n\n");
+		}
+
+	}
+
+}

@@ -1,0 +1,106 @@
+package br.com.lphantus.neighbor.controller;
+
+import javax.faces.bean.ManagedBean;
+
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import br.com.lphantus.neighbor.common.CondominioDTO;
+import br.com.lphantus.neighbor.common.ConfiguracaoCondominioDTO;
+import br.com.lphantus.neighbor.entity.ConfiguracaoCondominio;
+import br.com.lphantus.neighbor.service.IConfiguracaoCondominioService;
+import br.com.lphantus.neighbor.service.exception.ServiceException;
+import br.com.lphantus.neighbor.util.GerenciadorMensagem;
+import br.com.lphantus.neighbor.util.JsfUtil;
+
+@Controller
+@Scope(value = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
+@ManagedBean(name = "configuracaoCondominioController")
+@Transactional(propagation = Propagation.SUPPORTS)
+public class ConfiguracaoCondominioController extends AbstractController {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	@Autowired
+	private IConfiguracaoCondominioService configuracaoCondominioService;
+
+	private ConfiguracaoCondominioDTO entity;
+
+	/**
+	 * Construtor padrao
+	 */
+	public ConfiguracaoCondominioController() {
+
+	}
+
+	@Secured({ "ROLE_CONFIGURAR_CONDOMINIO", "ROLE_ROOT" })
+	@Transactional(propagation = Propagation.REQUIRED)
+	public String configurarCondominio() {
+		String retorno = "";
+		try {
+			if (usuarioLogado() != null) {
+				CondominioDTO condominio;
+				condominio = condominioUsuarioLogado();
+				this.entity = this.configuracaoCondominioService
+						.buscarPorCondominio(condominio);
+
+				registrarHistorico("Alterou os dados da configuracao do condominio.");
+
+				retorno = "/pages/financeiro/cadconfiguracoes.jsf";
+			}
+		} catch (final ServiceException e) {
+			getLogger().debug("Erro ao obter configuracao do condominio.", e);
+			JsfUtil.addErrorMessage(e.getMessage());
+		}
+
+		if (StringUtils.isBlank(retorno)) {
+			JsfUtil.addErrorMessage("Erro ao obter configuracao do condominio.");
+		}
+
+		return retorno;
+	}
+
+	@Secured({ "ROLE_CONFIGURAR_CONDOMINIO", "ROLE_ROOT" })
+	@Transactional(propagation = Propagation.REQUIRED)
+	public void gravar() {
+		try {
+
+			final ConfiguracaoCondominio entidade = ConfiguracaoCondominioDTO.Builder
+					.getInstance().createEntity(this.entity);
+			this.configuracaoCondominioService.update(entidade);
+
+			JsfUtil.addSuccessMessage(GerenciadorMensagem
+					.getMensagem("ALTER_OK"));
+		} catch (final ServiceException e) {
+			getLogger().debug("Erro ao gravar carteira.", e);
+			JsfUtil.addErrorMessage(e.getMessage());
+		} catch (final Exception e) {
+			getLogger().debug("Erro ao gravar carteira.", e);
+		}
+	}
+
+	/**
+	 * @return the entity
+	 */
+	public ConfiguracaoCondominioDTO getEntity() {
+		return this.entity;
+	}
+
+	/**
+	 * @param entity
+	 *            the entity to set
+	 */
+	public void setEntity(final ConfiguracaoCondominioDTO entity) {
+		this.entity = entity;
+	}
+
+}

@@ -1,0 +1,43 @@
+package br.com.lphantus.neighbor.repository.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.NoResultException;
+import javax.persistence.Query;
+
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import br.com.lphantus.neighbor.common.HistoricoDTO;
+import br.com.lphantus.neighbor.entity.Historico;
+import br.com.lphantus.neighbor.repository.IHistoricoDAO;
+import br.com.lphantus.neighbor.repository.exception.DAOException;
+
+@Repository
+@Scope(value = "prototype", proxyMode = ScopedProxyMode.TARGET_CLASS)
+@Transactional(propagation = Propagation.SUPPORTS)
+public class HistoricoDAOImpl extends
+		GenericDAOImpl<Long, HistoricoDTO, Historico> implements IHistoricoDAO {
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<HistoricoDTO> findAllByIdCondominio(Long idCondominio)
+			throws DAOException {
+		Query query = getEntityManager().createNamedQuery(
+				"Historico.findAllByCondominio");
+		query.setParameter("idCondominio", idCondominio);
+
+		List<Historico> lista = new ArrayList<Historico>();
+		try {
+			lista.addAll(query.getResultList());
+		} catch (NoResultException nre) {
+			// nao fazer nada
+		}
+		return HistoricoDTO.Builder.getInstance().createList(lista);
+	}
+
+}
