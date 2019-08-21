@@ -20,6 +20,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import br.com.lphantus.neighbor.common.DocumentoDTO;
 
+//TODO Refactor
 @Entity
 @Table(name = "DOCUMENTO")
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
